@@ -31,7 +31,7 @@ function ProfilePage() {
   });
 
   const isCreator = profile?.account_type === "creator";
-  const creatorPrice = Number(profile?.creator_profiles?.[0]?.subscription_price ?? 9.99);
+  const creatorPrice = Number(profile?.creator_profiles?.subscription_price ?? 9.99);
 
   const { data: posts = [] } = useQuery({
     queryKey: ["posts-by-creator", profile?.id],
@@ -93,8 +93,8 @@ function ProfilePage() {
     <div className="pb-12">
       {/* Banner */}
       <div className="relative h-48 w-full overflow-hidden bg-gradient-to-br from-onyx via-card to-background">
-        {profile.creator_profiles?.[0]?.banner_url && (
-          <img src={profile.creator_profiles[0].banner_url} alt="" className="h-full w-full object-cover opacity-80" loading="lazy" />
+        {profile.creator_profiles?.banner_url && (
+          <img src={profile.creator_profiles.banner_url} alt="" className="h-full w-full object-cover opacity-80" loading="lazy" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
       </div>
