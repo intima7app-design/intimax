@@ -62,8 +62,8 @@ function Explore() {
               <div className="p-3">
                 <p className="truncate font-medium text-foreground">{c.display_name}</p>
                 <p className="truncate text-xs text-muted-foreground">@{c.username}</p>
-                {c.creator_profiles?.[0]?.subscription_price && (
-                  <p className="mt-1 text-[11px] text-gold">{Number(c.creator_profiles[0].subscription_price)} TKN/mo</p>
+                {c.creator_profiles?.subscription_price && (
+                  <p className="mt-1 text-[11px] text-gold">{Number(c.creator_profiles.subscription_price)} TKN/mo</p>
                 )}
               </div>
             </Link>
