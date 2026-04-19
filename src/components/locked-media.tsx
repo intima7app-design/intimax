@@ -17,13 +17,19 @@ interface Props {
   isSubscribed: boolean;
   isOwner: boolean;
   mediaUrl?: string | null;
+  mediaType?: "image" | "video" | null;
+  /** CSS aspect-ratio value, e.g. "1 / 1", "4 / 5", "16 / 9". */
+  aspectRatio?: string;
+  /** CSS object-position value, e.g. "50% 50%". Used for videos. */
+  mediaPosition?: string | null;
   className?: string;
   children?: React.ReactNode;
 }
 
 export function LockedMedia({
   contentType, contentId, visibility, price, creatorId, creatorPrice = 9.99,
-  isUnlocked, isSubscribed, isOwner, mediaUrl, className, children,
+  isUnlocked, isSubscribed, isOwner, mediaUrl, mediaType = "image",
+  aspectRatio = "4 / 5", mediaPosition, className, children,
 }: Props) {
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -66,19 +72,36 @@ export function LockedMedia({
   };
 
   return (
-    <div className={cn("relative overflow-hidden rounded-2xl bg-onyx", className)}>
+    <div
+      className={cn("relative w-full overflow-hidden rounded-2xl bg-onyx", className)}
+      style={{ aspectRatio }}
+    >
       {mediaUrl ? (
-        <img
-          src={mediaUrl}
-          alt=""
-          loading="lazy"
-          className={cn(
-            "h-full w-full object-cover transition",
-            !accessible && "scale-110 blur-2xl opacity-50",
-          )}
-        />
+        mediaType === "video" ? (
+          <video
+            src={mediaUrl}
+            controls={accessible}
+            playsInline
+            preload="metadata"
+            className={cn(
+              "absolute inset-0 h-full w-full object-cover transition",
+              !accessible && "scale-110 blur-2xl opacity-50",
+            )}
+            style={{ objectPosition: mediaPosition ?? "50% 50%" }}
+          />
+        ) : (
+          <img
+            src={mediaUrl}
+            alt=""
+            loading="lazy"
+            className={cn(
+              "absolute inset-0 h-full w-full object-cover transition",
+              !accessible && "scale-110 blur-2xl opacity-50",
+            )}
+          />
+        )
       ) : (
-        <div className="aspect-[4/5] w-full bg-gradient-to-br from-onyx to-background" />
+        <div className="absolute inset-0 bg-gradient-to-br from-onyx to-background" />
       )}
 
       {children}

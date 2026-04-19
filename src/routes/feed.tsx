@@ -77,7 +77,9 @@ function FeedPage() {
                   isSubscribed={isSubscribed}
                   isOwner={isOwner}
                   mediaUrl={p.media_url}
-                  className="aspect-[4/5]"
+                  mediaType={p.media_type}
+                  aspectRatio={(p.aspect_ratio ?? "4:5").replace(":", " / ")}
+                  mediaPosition={p.media_position}
                 />
               ) : null}
 
