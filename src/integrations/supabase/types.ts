@@ -215,30 +215,36 @@ export type Database = {
       }
       posts: {
         Row: {
+          aspect_ratio: string
           caption: string | null
           created_at: string
           creator_id: string
           id: string
+          media_position: string | null
           media_type: Database["public"]["Enums"]["media_type"]
           media_url: string | null
           price: number
           visibility: Database["public"]["Enums"]["visibility_type"]
         }
         Insert: {
+          aspect_ratio?: string
           caption?: string | null
           created_at?: string
           creator_id: string
           id?: string
+          media_position?: string | null
           media_type?: Database["public"]["Enums"]["media_type"]
           media_url?: string | null
           price?: number
           visibility?: Database["public"]["Enums"]["visibility_type"]
         }
         Update: {
+          aspect_ratio?: string
           caption?: string | null
           created_at?: string
           creator_id?: string
           id?: string
+          media_position?: string | null
           media_type?: Database["public"]["Enums"]["media_type"]
           media_url?: string | null
           price?: number
