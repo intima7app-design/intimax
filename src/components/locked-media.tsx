@@ -29,7 +29,7 @@ interface Props {
 export function LockedMedia({
   contentType, contentId, visibility, price, creatorId, creatorPrice = 9.99,
   isUnlocked, isSubscribed, isOwner, mediaUrl, mediaType = "image",
-  aspectRatio = "4 / 5", mediaPosition, className, children,
+  aspectRatio, mediaPosition, className, children,
 }: Props) {
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -74,7 +74,7 @@ export function LockedMedia({
   return (
     <div
       className={cn("relative w-full overflow-hidden rounded-2xl bg-onyx", className)}
-      style={{ aspectRatio }}
+      style={aspectRatio ? { aspectRatio } : undefined}
     >
       {mediaUrl ? (
         mediaType === "video" ? (
