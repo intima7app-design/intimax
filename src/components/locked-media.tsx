@@ -45,7 +45,7 @@ export function LockedMedia({
     if (!user) return;
     setBusy(true);
     try {
-      await unlockContent(contentType, contentId, price, user.id);
+      await unlockContent(contentType, contentId, price, user.id, creatorId);
       toast.success(`Unlocked for ${price} tokens`);
       qc.invalidateQueries({ queryKey: ["tokens"] });
       qc.invalidateQueries({ queryKey: ["unlocks"] });
