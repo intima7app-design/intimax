@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Bell } from "lucide-react";
 import { RequireAuth } from "@/components/require-auth";
 import { AppShell } from "@/components/app-shell";
 import { Avatar } from "@/components/avatar";
 import { useAuth } from "@/lib/auth-context";
-import { fetchNotifications } from "@/lib/queries";
+import { fetchNotifications, markAllNotificationsRead } from "@/lib/queries";
 import { formatDistanceToNow } from "@/lib/format";
 
 export const Route = createFileRoute("/notifications")({
@@ -14,7 +15,18 @@ export const Route = createFileRoute("/notifications")({
 
 function NotificationsPage() {
   const { user } = useAuth();
+  const qc = useQueryClient();
   const { data: items = [] } = useQuery({ queryKey: ["notifications", user!.id], queryFn: () => fetchNotifications(user!.id) });
+
+  useEffect(() => {
+    if (!user) return;
+    markAllNotificationsRead(user.id)
+      .then(() => {
+        qc.setQueryData(["unread-notifications", user.id], 0);
+        qc.invalidateQueries({ queryKey: ["unread-notifications", user.id] });
+      })
+      .catch(() => {});
+  }, [user, qc]);
 
   return (
     <div className="space-y-2 p-4">
