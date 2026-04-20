@@ -51,6 +51,7 @@ export type Database = {
       }
       creator_profiles: {
         Row: {
+          banner_position: string
           banner_url: string | null
           created_at: string
           subscription_price: number
@@ -59,6 +60,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          banner_position?: string
           banner_url?: string | null
           created_at?: string
           subscription_price?: number
@@ -67,6 +69,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          banner_position?: string
           banner_url?: string | null
           created_at?: string
           subscription_price?: number
