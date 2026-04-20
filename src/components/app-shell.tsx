@@ -100,7 +100,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
 function CountBadge({ count }: { count: number }) {
   return (
-    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold leading-none text-white shadow-[0_0_0_2px_hsl(var(--background))]">
+    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-destructive-foreground ring-2 ring-background">
       {count > 9 ? "9+" : count}
     </span>
   );
