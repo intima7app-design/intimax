@@ -1,18 +1,20 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Crown, MessageCircle, UserPlus, UserMinus } from "lucide-react";
+import { Crown, MessageCircle, UserPlus, UserMinus, Lock, Pencil, Play } from "lucide-react";
 import { RequireAuth } from "@/components/require-auth";
 import { AppShell } from "@/components/app-shell";
 import { Avatar } from "@/components/avatar";
-import { LockedMedia } from "@/components/locked-media";
+import { EditProfileDialog } from "@/components/edit-profile-dialog";
+import { PostModal } from "@/components/post-modal";
 import { useAuth } from "@/lib/auth-context";
 import {
   fetchProfileByUsername, fetchPostsByCreator, fetchMyUnlocks, fetchMySubscriptions,
   fetchFollowingCreatorIds, toggleFollow, subscribeToCreator,
 } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/u/$username")({
   component: () => (<RequireAuth><AppShell><ProfilePage /></AppShell></RequireAuth>),
@@ -24,6 +26,8 @@ function ProfilePage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [openPost, setOpenPost] = useState<any | null>(null);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["profile-by-username", username],
@@ -119,7 +123,14 @@ function ProfilePage() {
           {isCreator && <div><span className="font-semibold text-foreground">{posts.length}</span> <span className="text-muted-foreground">posts</span></div>}
         </div>
 
-        {!isMe && (
+        {isMe ? (
+          <div className="mt-5">
+            <button onClick={() => setEditOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2 text-sm transition hover:border-gold">
+              <Pencil className="h-4 w-4" /> Edit profile
+            </button>
+          </div>
+        ) : (
           <div className="mt-5 flex flex-wrap items-center gap-2">
             <button onClick={handleFollow} disabled={busy}
               className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2 text-sm transition hover:border-gold disabled:opacity-50">
@@ -153,28 +164,105 @@ function ProfilePage() {
                 No posts yet
               </p>
             ) : (
-              <div className="grid grid-cols-3 gap-1.5">
-                {posts.map((p: any) => (
-                  <LockedMedia
-                    key={p.id}
-                    contentType="post"
-                    contentId={p.id}
-                    visibility={p.visibility}
-                    price={Number(p.price)}
-                    creatorId={p.creator_id}
-                    creatorPrice={creatorPrice}
-                    isUnlocked={unlocks.has(`post:${p.id}`)}
-                    isSubscribed={isSubscribed}
-                    isOwner={isMe}
-                    mediaUrl={p.media_url}
-                    className="aspect-square"
-                  />
-                ))}
+              <div className="grid grid-cols-3 gap-1">
+                {posts.map((p: any) => {
+                  const accessible = isMe || p.visibility === "free" ||
+                    (p.visibility === "subscribers" && isSubscribed) ||
+                    (p.visibility === "ppv" && unlocks.has(`post:${p.id}`));
+                  const locked = !accessible;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setOpenPost(p)}
+                      className="group relative aspect-square overflow-hidden bg-onyx"
+                    >
+                      {p.media_url ? (
+                        p.media_type === "video" ? (
+                          <video
+                            src={p.media_url}
+                            muted
+                            playsInline
+                            preload="metadata"
+                            className={cn("h-full w-full object-cover transition group-hover:scale-105",
+                              locked && "blur-xl scale-110")}
+                            style={{ objectPosition: p.media_position ?? "50% 50%" }}
+                          />
+                        ) : (
+                          <img
+                            src={p.media_url}
+                            alt=""
+                            loading="lazy"
+                            className={cn("h-full w-full object-cover transition group-hover:scale-105",
+                              locked && "blur-xl scale-110")}
+                          />
+                        )
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center p-2 text-center text-[10px] text-muted-foreground">
+                          {p.caption?.slice(0, 50) ?? "Post"}
+                        </div>
+                      )}
+
+                      {locked && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-background/30">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-background/80 backdrop-blur-sm border border-gold/30">
+                            <Lock className="h-4 w-4 text-gold" />
+                          </div>
+                        </div>
+                      )}
+
+                      {!locked && p.media_type === "video" && (
+                        <div className="absolute right-2 top-2 rounded-full bg-black/60 p-1">
+                          <Play className="h-3 w-3 fill-white text-white" />
+                        </div>
+                      )}
+
+                      {p.visibility === "ppv" && !locked && (
+                        <span className="absolute left-1.5 top-1.5 rounded-full bg-gold/90 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider text-primary-foreground">
+                          PPV
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </section>
         )}
       </div>
+
+      {isMe && (
+        <EditProfileDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          userId={user!.id}
+          isCreator={isCreator}
+          initial={{
+            username: profile.username,
+            display_name: profile.display_name,
+            bio: profile.bio,
+            avatar_url: profile.avatar_url,
+            banner_url: creatorProfile?.banner_url ?? null,
+            subscription_price: Number(creatorProfile?.subscription_price ?? 9.99),
+          }}
+        />
+      )}
+
+      <PostModal
+        open={!!openPost}
+        onOpenChange={(v) => !v && setOpenPost(null)}
+        post={openPost}
+        creator={{
+          username: profile.username,
+          display_name: profile.display_name,
+          avatar_url: profile.avatar_url,
+          account_type: profile.account_type,
+        }}
+        creatorPrice={creatorPrice}
+        isUnlocked={openPost ? unlocks.has(`post:${openPost.id}`) : false}
+        isSubscribed={isSubscribed}
+        isOwner={isMe}
+      />
     </div>
   );
 }
