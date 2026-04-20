@@ -101,7 +101,13 @@ function ProfilePage() {
       {/* Banner */}
       <div className="relative h-48 w-full overflow-hidden bg-gradient-to-br from-onyx via-card to-background">
         {creatorProfile?.banner_url && (
-          <img src={creatorProfile.banner_url} alt="" className="h-full w-full object-cover opacity-80" loading="lazy" />
+          <img
+            src={creatorProfile.banner_url}
+            alt=""
+            className="h-full w-full object-cover opacity-80"
+            style={{ objectPosition: creatorProfile?.banner_position ?? "50% 50%" }}
+            loading="lazy"
+          />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
       </div>
@@ -243,6 +249,7 @@ function ProfilePage() {
             bio: profile.bio,
             avatar_url: profile.avatar_url,
             banner_url: creatorProfile?.banner_url ?? null,
+            banner_position: creatorProfile?.banner_position ?? "50% 50%",
             subscription_price: Number(creatorProfile?.subscription_price ?? 9.99),
           }}
         />

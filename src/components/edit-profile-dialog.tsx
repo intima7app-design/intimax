@@ -188,3 +188,10 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </label>
   );
 }
+
+function parsePos(raw: string | null | undefined): { x: number; y: number } {
+  if (!raw) return { x: 50, y: 50 };
+  const m = raw.match(/(\d+(?:\.\d+)?)\s*%?\s+(\d+(?:\.\d+)?)\s*%?/);
+  if (!m) return { x: 50, y: 50 };
+  return { x: Number(m[1]), y: Number(m[2]) };
+}
