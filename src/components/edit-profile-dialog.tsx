@@ -17,6 +17,7 @@ interface Props {
     bio: string | null;
     avatar_url: string | null;
     banner_url: string | null;
+    banner_position: string;
     subscription_price: number;
   };
 }
@@ -28,6 +29,7 @@ export function EditProfileDialog({ open, onOpenChange, userId, isCreator, initi
   const [bio, setBio] = useState(initial.bio ?? "");
   const [avatarUrl, setAvatarUrl] = useState(initial.avatar_url);
   const [bannerUrl, setBannerUrl] = useState(initial.banner_url);
+  const [bannerPos, setBannerPos] = useState(() => parsePos(initial.banner_position));
   const [price, setPrice] = useState(initial.subscription_price);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState<"avatar" | "banner" | null>(null);
@@ -67,7 +69,11 @@ export function EditProfileDialog({ open, onOpenChange, userId, isCreator, initi
 
       if (isCreator) {
         const { error: cErr } = await supabase.from("creator_profiles")
-          .update({ banner_url: bannerUrl, subscription_price: price })
+          .update({
+            banner_url: bannerUrl,
+            banner_position: `${bannerPos.x}% ${bannerPos.y}%`,
+            subscription_price: price,
+          })
           .eq("user_id", userId);
         if (cErr) throw cErr;
       }
