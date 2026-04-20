@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { RequireAuth } from "@/components/require-auth";
 import { AppShell } from "@/components/app-shell";
@@ -8,8 +8,25 @@ import { fetchConversations } from "@/lib/queries";
 import { formatDistanceToNow } from "@/lib/format";
 
 export const Route = createFileRoute("/messages")({
-  component: () => (<RequireAuth><AppShell><Messages /></AppShell></RequireAuth>),
+  component: MessagesRoute,
 });
+
+function MessagesRoute() {
+  const location = useLocation();
+  const isConversationRoute = /^\/messages\/[^/]+$/.test(location.pathname);
+
+  if (isConversationRoute) {
+    return <Outlet />;
+  }
+
+  return (
+    <RequireAuth>
+      <AppShell>
+        <Messages />
+      </AppShell>
+    </RequireAuth>
+  );
+}
 
 function Messages() {
   const { user } = useAuth();
