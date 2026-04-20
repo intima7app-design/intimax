@@ -144,9 +144,14 @@ function ProfilePage() {
               {isFollowing ? "Following" : "Follow"}
             </button>
             <button onClick={() => {
-              console.log("Message target profile.id:", profile.id);
-              if (!profile?.id) return toast.error("Creator profile is unavailable");
-              navigate({ to: "/messages/$userId", params: { userId: profile.id } });
+              const creatorUserId = (profile as any).user_id ?? profile.id;
+              console.log("Message target", {
+                profileId: profile.id,
+                profileUserId: (profile as any).user_id,
+                creatorUserId,
+              });
+              if (!creatorUserId) return toast.error("Creator profile is unavailable");
+              navigate({ to: "/messages/$userId", params: { userId: creatorUserId } });
             }}
               className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2 text-sm hover:border-gold">
               <MessageCircle className="h-4 w-4" /> Message
