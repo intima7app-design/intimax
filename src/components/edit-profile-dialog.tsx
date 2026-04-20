@@ -100,21 +100,25 @@ export function EditProfileDialog({ open, onOpenChange, userId, isCreator, initi
           {isCreator && (
             <div>
               <p className="mb-1.5 text-xs uppercase tracking-widest text-muted-foreground">Banner</p>
-              <button type="button" onClick={() => bannerInput.current?.click()}
-                className="relative h-28 w-full overflow-hidden rounded-xl border border-border bg-onyx">
-                {bannerUrl ? (
-                  <img src={bannerUrl} alt="banner" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-                    <ImagePlus className="h-5 w-5" />
-                  </div>
-                )}
-                {uploading === "banner" && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-                    <Loader2 className="h-5 w-5 animate-spin text-gold" />
-                  </div>
-                )}
-              </button>
+              {bannerUrl ? (
+                <div className="space-y-2">
+                  <BannerPositioner src={bannerUrl} position={bannerPos} onChange={setBannerPos} />
+                  <button type="button" onClick={() => bannerInput.current?.click()}
+                    className="inline-flex items-center gap-1.5 text-xs text-gold">
+                    <ImagePlus className="h-3.5 w-3.5" /> Replace banner
+                  </button>
+                </div>
+              ) : (
+                <button type="button" onClick={() => bannerInput.current?.click()}
+                  className="relative flex h-28 w-full items-center justify-center overflow-hidden rounded-xl border border-dashed border-border bg-onyx text-muted-foreground">
+                  <ImagePlus className="h-5 w-5" />
+                </button>
+              )}
+              {uploading === "banner" && (
+                <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin text-gold" /> Uploading…
+                </p>
+              )}
               <input ref={bannerInput} type="file" accept="image/*" className="hidden"
                 onChange={(e) => e.target.files?.[0] && upload(e.target.files[0], "banner")} />
             </div>
