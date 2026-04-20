@@ -137,6 +137,48 @@ export async function fetchNotifications(userId: string) {
   return data ?? [];
 }
 
+export async function fetchUnreadNotificationCount(userId: string) {
+  const { count, error } = await supabase
+    .from("notifications")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("read", false);
+  if (error) throw error;
+  return count ?? 0;
+}
+
+export async function markAllNotificationsRead(userId: string) {
+  const { error } = await supabase
+    .from("notifications")
+    .update({ read: true })
+    .eq("user_id", userId)
+    .eq("read", false);
+  if (error) throw error;
+}
+
+const MESSAGES_SEEN_KEY = (userId: string) => `intima:messages-seen:${userId}`;
+
+export function getMessagesLastSeen(userId: string): string {
+  if (typeof window === "undefined") return new Date(0).toISOString();
+  return window.localStorage.getItem(MESSAGES_SEEN_KEY(userId)) ?? new Date(0).toISOString();
+}
+
+export function setMessagesLastSeen(userId: string, iso: string = new Date().toISOString()) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(MESSAGES_SEEN_KEY(userId), iso);
+}
+
+export async function fetchUnreadMessageCount(userId: string) {
+  const since = getMessagesLastSeen(userId);
+  const { count, error } = await supabase
+    .from("messages")
+    .select("*", { count: "exact", head: true })
+    .eq("receiver_id", userId)
+    .gt("created_at", since);
+  if (error) throw error;
+  return count ?? 0;
+}
+
 export async function fetchTransactions(userId: string) {
   const { data, error } = await supabase
     .from("token_transactions")
