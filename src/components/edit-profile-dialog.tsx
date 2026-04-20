@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Loader2, ImagePlus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { BannerPositioner } from "@/components/banner-positioner";
 
 interface Props {
   open: boolean;
@@ -16,6 +17,7 @@ interface Props {
     bio: string | null;
     avatar_url: string | null;
     banner_url: string | null;
+    banner_position: string;
     subscription_price: number;
   };
 }
@@ -27,6 +29,7 @@ export function EditProfileDialog({ open, onOpenChange, userId, isCreator, initi
   const [bio, setBio] = useState(initial.bio ?? "");
   const [avatarUrl, setAvatarUrl] = useState(initial.avatar_url);
   const [bannerUrl, setBannerUrl] = useState(initial.banner_url);
+  const [bannerPos, setBannerPos] = useState(() => parsePos(initial.banner_position));
   const [price, setPrice] = useState(initial.subscription_price);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState<"avatar" | "banner" | null>(null);
@@ -66,7 +69,11 @@ export function EditProfileDialog({ open, onOpenChange, userId, isCreator, initi
 
       if (isCreator) {
         const { error: cErr } = await supabase.from("creator_profiles")
-          .update({ banner_url: bannerUrl, subscription_price: price })
+          .update({
+            banner_url: bannerUrl,
+            banner_position: `${bannerPos.x}% ${bannerPos.y}%`,
+            subscription_price: price,
+          })
           .eq("user_id", userId);
         if (cErr) throw cErr;
       }
@@ -93,21 +100,25 @@ export function EditProfileDialog({ open, onOpenChange, userId, isCreator, initi
           {isCreator && (
             <div>
               <p className="mb-1.5 text-xs uppercase tracking-widest text-muted-foreground">Banner</p>
-              <button type="button" onClick={() => bannerInput.current?.click()}
-                className="relative h-28 w-full overflow-hidden rounded-xl border border-border bg-onyx">
-                {bannerUrl ? (
-                  <img src={bannerUrl} alt="banner" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-                    <ImagePlus className="h-5 w-5" />
-                  </div>
-                )}
-                {uploading === "banner" && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-                    <Loader2 className="h-5 w-5 animate-spin text-gold" />
-                  </div>
-                )}
-              </button>
+              {bannerUrl ? (
+                <div className="space-y-2">
+                  <BannerPositioner src={bannerUrl} position={bannerPos} onChange={setBannerPos} />
+                  <button type="button" onClick={() => bannerInput.current?.click()}
+                    className="inline-flex items-center gap-1.5 text-xs text-gold">
+                    <ImagePlus className="h-3.5 w-3.5" /> Replace banner
+                  </button>
+                </div>
+              ) : (
+                <button type="button" onClick={() => bannerInput.current?.click()}
+                  className="relative flex h-28 w-full items-center justify-center overflow-hidden rounded-xl border border-dashed border-border bg-onyx text-muted-foreground">
+                  <ImagePlus className="h-5 w-5" />
+                </button>
+              )}
+              {uploading === "banner" && (
+                <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin text-gold" /> Uploading…
+                </p>
+              )}
               <input ref={bannerInput} type="file" accept="image/*" className="hidden"
                 onChange={(e) => e.target.files?.[0] && upload(e.target.files[0], "banner")} />
             </div>
@@ -176,4 +187,11 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       {children}
     </label>
   );
+}
+
+function parsePos(raw: string | null | undefined): { x: number; y: number } {
+  if (!raw) return { x: 50, y: 50 };
+  const m = raw.match(/(\d+(?:\.\d+)?)\s*%?\s+(\d+(?:\.\d+)?)\s*%?/);
+  if (!m) return { x: 50, y: 50 };
+  return { x: Number(m[1]), y: Number(m[2]) };
 }

@@ -1,0 +1,1 @@
+ALTER TABLE public.creator_profiles ADD COLUMN IF NOT EXISTS banner_position TEXT NOT NULL DEFAULT '50% 50%';
