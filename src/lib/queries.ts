@@ -165,6 +165,7 @@ export async function unlockContent(
   contentId: string,
   price: number,
   userId: string,
+  creatorId?: string,
 ) {
   await spendTokens(price, "ppv_unlock", `Unlocked ${contentType}`);
   const { error } = await supabase.from("content_unlocks").insert({
@@ -174,6 +175,15 @@ export async function unlockContent(
     price_paid: price,
   });
   if (error) throw error;
+
+  if (creatorId && creatorId !== userId) {
+    await supabase.from("notifications").insert({
+      user_id: creatorId,
+      actor_id: userId,
+      type: "content_unlocked",
+      message: `unlocked your ${contentType} for ${price} TKN`,
+    });
+  }
 }
 
 export async function subscribeToCreator(fanId: string, creatorId: string, price: number) {
@@ -230,6 +240,23 @@ export async function sendMessage(
     is_unlocked: true,
   });
   if (error) throw error;
+
+  await supabase.from("notifications").insert({
+    user_id: receiverId,
+    actor_id: senderId,
+    type: "new_message",
+    message: "sent you a message",
+  });
+}
+
+export async function tipCreator(fanId: string, creatorId: string, amount: number) {
+  await spendTokens(amount, "tip", "Tip");
+  await supabase.from("notifications").insert({
+    user_id: creatorId,
+    actor_id: fanId,
+    type: "new_tip",
+    message: `tipped you ${amount} TKN`,
+  });
 }
 
 export async function fetchMessages(userA: string, userB: string) {
