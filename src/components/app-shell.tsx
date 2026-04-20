@@ -1,13 +1,22 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { Home, Compass, MessageCircle, User, Plus, Bell } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { fetchMyProfile, fetchTokenBalance } from "@/lib/queries";
+import {
+  fetchMyProfile,
+  fetchTokenBalance,
+  fetchUnreadNotificationCount,
+  fetchUnreadMessageCount,
+  setMessagesLastSeen,
+} from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const qc = useQueryClient();
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -20,6 +29,30 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     queryFn: () => fetchTokenBalance(user!.id),
     enabled: !!user,
   });
+
+  const { data: unreadNotifs = 0 } = useQuery({
+    queryKey: ["unread-notifications", user?.id],
+    queryFn: () => fetchUnreadNotificationCount(user!.id),
+    enabled: !!user,
+    refetchInterval: 15_000,
+  });
+
+  const { data: unreadMsgs = 0 } = useQuery({
+    queryKey: ["unread-messages", user?.id],
+    queryFn: () => fetchUnreadMessageCount(user!.id),
+    enabled: !!user,
+    refetchInterval: 10_000,
+  });
+
+  // Mark messages as seen when viewing any /messages route
+  useEffect(() => {
+    if (!user) return;
+    if (location.pathname.startsWith("/messages")) {
+      setMessagesLastSeen(user.id);
+      qc.setQueryData(["unread-messages", user.id], 0);
+      qc.invalidateQueries({ queryKey: ["unread-messages", user.id] });
+    }
+  }, [location.pathname, user, qc]);
 
   const isCreator = profile?.account_type === "creator";
 
@@ -39,8 +72,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 {balance.toFixed(0)}
               </span>
             </div>
-            <Link to="/notifications" className="rounded-full border border-border bg-card p-2 text-muted-foreground hover:text-gold transition">
+            <Link
+              to="/notifications"
+              className="relative rounded-full border border-border bg-card p-2 text-muted-foreground hover:text-gold transition"
+              aria-label={unreadNotifs > 0 ? `Notifications, ${unreadNotifs} unread` : "Notifications"}
+            >
               <Bell className="h-4 w-4" />
+              {unreadNotifs > 0 && <CountBadge count={unreadNotifs} />}
             </Link>
             <button
               onClick={async () => { await signOut(); navigate({ to: "/login" }); }}
@@ -55,12 +93,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main className="mx-auto max-w-2xl">{children}</main>
 
       {/* Bottom nav */}
-      <BottomNav isCreator={isCreator} username={profile?.username} />
+      <BottomNav isCreator={isCreator} username={profile?.username} unreadMsgs={unreadMsgs} />
     </div>
   );
 }
 
-function BottomNav({ isCreator, username }: { isCreator: boolean; username?: string }) {
+function CountBadge({ count }: { count: number }) {
+  return (
+    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-destructive-foreground ring-2 ring-background">
+      {count > 9 ? "9+" : count}
+    </span>
+  );
+}
+
+function BottomNav({ isCreator, username, unreadMsgs }: { isCreator: boolean; username?: string; unreadMsgs: number }) {
   const location = useLocation();
   const items = [
     { to: "/feed", icon: Home, label: "Feed" },
@@ -87,17 +133,19 @@ function BottomNav({ isCreator, username }: { isCreator: boolean; username?: str
               </Link>
             );
           }
+          const showMsgBadge = it.label === "Messages" && unreadMsgs > 0;
           return (
             <Link
               key={it.label}
               to={it.to}
               className={cn(
-                "flex h-10 w-10 items-center justify-center rounded-full transition",
+                "relative flex h-10 w-10 items-center justify-center rounded-full transition",
                 active ? "text-gold" : "text-muted-foreground hover:text-foreground",
               )}
               aria-label={it.label}
             >
               <it.icon className="h-5 w-5" />
+              {showMsgBadge && <CountBadge count={unreadMsgs} />}
             </Link>
           );
         })}
