@@ -53,19 +53,34 @@ function Conversation() {
 
   return (
     <div className="flex h-[calc(100dvh-180px)] flex-col p-4">
-      {other && (
-        <header className="mb-3 flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
-          <Avatar size="md" username={other.username} displayName={other.display_name} avatarUrl={other.avatar_url} accountType={other.account_type} />
-          <div>
-            <p className="font-medium">{other.display_name}</p>
-            <p className="text-xs text-muted-foreground">@{other.username}</p>
-          </div>
-        </header>
-      )}
+      <header className="mb-3 flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
+        {other ? (
+          <>
+            <Avatar size="md" username={other.username} displayName={other.display_name} avatarUrl={other.avatar_url} accountType={other.account_type} />
+            <div className="min-w-0">
+              <p className="truncate font-medium">{other.display_name}</p>
+              <p className="truncate text-xs text-muted-foreground">@{other.username}</p>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="h-10 w-10 animate-pulse rounded-full bg-onyx" />
+            <div className="space-y-1.5">
+              <div className="h-3 w-24 animate-pulse rounded bg-onyx" />
+              <div className="h-2.5 w-16 animate-pulse rounded bg-onyx" />
+            </div>
+          </>
+        )}
+      </header>
 
       <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto px-1 py-2">
         {messages.length === 0 && (
-          <p className="text-center text-sm text-muted-foreground">Start the conversation.</p>
+          <div className="mt-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              {other ? `Start a conversation with ${other.display_name}` : "Loading conversation…"}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground/70">Your messages are private.</p>
+          </div>
         )}
         {messages.map((m: any) => {
           const mine = m.sender_id === user!.id;
