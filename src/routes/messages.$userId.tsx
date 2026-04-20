@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Send } from "lucide-react";
+import { Send, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { RequireAuth } from "@/components/require-auth";
 import { AppShell } from "@/components/app-shell";
@@ -54,18 +54,25 @@ function Conversation() {
   return (
     <div className="flex h-[calc(100dvh-180px)] flex-col p-4">
       <header className="mb-3 flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
+        <Link
+          to="/messages"
+          aria-label="Back to messages"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition hover:border-gold hover:text-gold"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
         {other ? (
           <>
             <Avatar size="md" username={other.username} displayName={other.display_name} avatarUrl={other.avatar_url} accountType={other.account_type} />
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="truncate font-medium">{other.display_name}</p>
               <p className="truncate text-xs text-muted-foreground">@{other.username}</p>
             </div>
           </>
         ) : (
           <>
-            <div className="h-10 w-10 animate-pulse rounded-full bg-onyx" />
-            <div className="space-y-1.5">
+            <div className="h-10 w-10 shrink-0 animate-pulse rounded-full bg-onyx" />
+            <div className="flex-1 space-y-1.5">
               <div className="h-3 w-24 animate-pulse rounded bg-onyx" />
               <div className="h-2.5 w-16 animate-pulse rounded bg-onyx" />
             </div>
